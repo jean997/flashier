@@ -136,7 +136,7 @@ flash_backfit <- function(flash,
     extrapolate.param <- init.beta(extrapolate.param)
     old.f <- flash
   }
-  while (iter < maxiter && max(conv.crit) > tol && !is.timed.out(flash)) {
+  while (iter < maxiter  && max(conv.crit) > tol && !is.timed.out(flash)) {
     iter <- iter + 1
 
     kset <- get.next.kset(method, kset, conv.crit, tol)
@@ -176,14 +176,8 @@ flash_backfit <- function(flash,
           flash <- proposed.f
           extrapolate.param <- accelerate(extrapolate.param)
         }
+
      # }
-        ## update B, store KL term
-        old.fb <- flash
-        flash <- update_random_effect(old.fb)
-        flash <- update.tau.afterB(flash, old.fb)
-        ## update tau
-
-
       info <- calc.update.info(flash,
                                old.f,
                                conv.crit.fn,
@@ -196,6 +190,14 @@ flash_backfit <- function(flash,
                         k = "all",
                         backfit = TRUE)
     }
+
+
+    ## update B, store KL term
+    old.fb <- flash
+    flash <- update_random_effect(old.fb)
+    ## update tau
+    flash <- update.tau.afterB(flash, old.fb)
+
 
     if (is.null(next.tol.target) && max(conv.crit) > 0 && max(conv.crit) < Inf) {
       # Set the first target.

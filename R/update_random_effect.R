@@ -97,6 +97,13 @@ get.KLB <- function(f){
 ## eigS eigen(Sigma_i)
 ## D: diagonal elments of noise precision
 ## r residual Y - LF^T
+## posterior:
+# b | r \propto p(r | b)p(b)
+# exp( (r - b)^T diag(D) (r-b) + b^T (S0^{-1}) b)
+# b^T (S0^{-1} + diag(D)) b - 2*r^T diag(D) b
+# Sb = solve((S0^{-1} + diag(D)) = U 1/(1/d0 + D) U^T
+# ub = Sb diag(D) r
+#
 # KL calculation
 # KL = E_post[ log(p_0(b)) - log(p_post(b))]
 # p_0(b) = N(b; 0, S_0); S_0 = U diag(d_0) U^T; d_0 = eigS$values
@@ -114,7 +121,7 @@ update.b.1 <- function(r, eigS, D){
   d <- 1/((1/d0) + D)
   # Sb <- emulator::quad.tform(diag(d), U) U diag(d) U^T
   Sb <- tcrossprod(U, tcrossprod(U, diag(d)))
-  mub <- Sb %*% (r/D)
+  mub <- Sb %*% (r*D)
   mu2b <-  mub^2 + diag(Sb)
   ## calculate KL
   delta_logdet <- -0.5*sum(log(d0)) + 0.5*sum(log(d))
@@ -137,7 +144,7 @@ update.b.all <- function(ER, eigS, D){
   d <- 1/((1/d0) + D)
   # Sb <- emulator::quad.tform(diag(d), U) U diag(d) U^T
   Sb <- tcrossprod(U, tcrossprod(U, diag(d)))
-  EB <- t(Sb %*% (t(ER)/D))
+  EB <- t(Sb %*% (t(ER)*D))
   EB2 <- t(t(EB^2) + diag(Sb))
 
   ## calculate KL

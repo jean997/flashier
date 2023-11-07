@@ -71,10 +71,11 @@ update.simple.tau.afterB <- function(new.flash, old.flash) {
   delta.R2 <- calc.delta.R2.afterB(new.flash, old.flash)
   est.tau  <- estimate.simple.tau(old.flash, delta.R2)
   tau      <- tau.from.given.and.est(old.flash, est.tau)
-  new.flash   <- set.delta.R2(new.flash, delta.R2)
+  #new.flash   <- set.delta.R2(new.flash, delta.R2)
   new.flash   <- set.est.tau(new.flash, est.tau)
   new.flash <- set.tau(new.flash, tau)
-
+  new.flash <- set.R2(new.flash, get.R2(old.flash) + delta.R2)
+  new.flash <- set.obj(new.flash, calc.obj(new.flash))
   return(new.flash)
 }
 
