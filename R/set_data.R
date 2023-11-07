@@ -5,7 +5,11 @@
 #   errors are provided, then (depending on the variance type) the object will
 #   also contain fields "given.S2" or "given.tau" and "given.tau.dim".
 #
-set.flash.data <- function(data, S = NULL, S.dim = NULL, var.type = NULL) {
+# For random effect - added re_dim (1 for rows, 2 for cols) and
+# re_cov which should either be an appropriately sized covariance matrix
+# or a list of covariance matrices.
+set.flash.data <- function(data, S = NULL, S.dim = NULL, var.type = NULL,
+                           re_cov = NULL) {
   flash.data <- list(t.init = Sys.time(), t.final = Sys.time())
 
   data <- handle.data(data)
@@ -65,6 +69,25 @@ set.flash.data <- function(data, S = NULL, S.dim = NULL, var.type = NULL) {
     flash.data$given.tau <- tau
     flash.data$given.tau.dim <- S.dim
   }
+
+  #### random effect
+  if(!is.null(re_cov)){
+    if(inherits(re_cov, "matrix")){
+      must.be.psd(re_cov)
+      re_dim <- infer.re.dim(re_cov, dim(flash.data$Y))
+      flash.data$re_cov <- eigen(re_cov)
+    }else if(inherits(re_cov, "list")){
+      re_dim <- infer.re.dim(re_cov[[1]], dim(flash.data$Y))
+      if(!length(re_cov) == dim(flash.data$Y)[re_dim]){
+        stop(paste0("Expected ", deparse(substitute(re_cov)),
+                    " to have ", dim(flash.data$Y)[re_dim], " elements."))
+      }
+      sapply(re_cov, must.be.psd)
+      flash.data$re_cov <- laspply(re_cov, eigen)
+    }
+    flash.data$re_dim <- re_dim
+  }
+  #############
 
   class(flash.data) <- c("flash.data", "list")
 
@@ -181,4 +204,20 @@ is.S2.stored <- function(S, S.dim, var.type) {
          && (length(var.type) > 1
              || is.null(S.dim)
              || (S.dim > 0 && !(S.dim == var.type))))
+}
+
+
+## infer if random effect is row-wise or column-wise
+infer.re.dim <- function(re_cov, Y.dim){
+  if(!isSymmetric(re_cov)){
+    stop("re_cov is not symmetric.\n")
+  }
+  re_cov.dim <- dim(re_cov)
+  if(re_cov.dim[1] == Y.dim[1]){
+    return(2)
+  }else if(re_cov.dim[1] == Y.dim[2]){
+    return(1)
+  }else{
+    stop("Dimensions of re_cov are incompatible with data.\n")
+  }
 }

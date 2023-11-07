@@ -190,6 +190,7 @@ calc.x <- function(factor, n, flash, s2, tau) {
     Y        <- get.Y(flash)
     Z        <- get.nonmissing(flash)
     flash.EF <- get.EF(flash)
+    flash.EB <- get.EB(flash)
   }
 
   k <- get.k(factor)
@@ -220,13 +221,18 @@ calc.x <- function(factor, n, flash, s2, tau) {
       flash.EF.tau <- lowranks.prod(tau, flash.EF, broadcast = TRUE)
       if (!is.new(factor))
         flash.EF.tau <- lowrank.drop.k(flash.EF.tau, k)
+      ####
+      flash.EB.tau <- premult.nmode.prod.r1(flash.EB, tau, factor.EF[-n], n)
+      ###
       x <- x - premult.nmode.prod.r1(Z, flash.EF.tau, factor.EF[-n], n)
+      x <- x - flash.EB.tau
     } else {
       flash.EF.minus.k <- flash.EF
       if (!is.new(factor))
         flash.EF.minus.k <- lowrank.drop.k(flash.EF, k)
       flash.EF.tau <- elemwise.prod.fullrank.lowrank(tau, flash.EF.minus.k)
-      x <- x - nmode.prod.r1(flash.EF.tau, factor.EF[-n], n)
+      flash.EB.tau <- elemwise.prod.fullrank.lowrank(tau, flash.EB)
+      x <- x - nmode.prod.r1(flash.EF.tau, factor.EF[-n], n) - nmode.prod.r1(flash.EB.tau, factor.EF[-n], n)
     }
   }
 

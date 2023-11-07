@@ -1,5 +1,5 @@
 calc.obj <- function(flash, factor = NULL) {
-  KL <- sum(unlist(get.KL(flash)))
+  KL <- sum(unlist(get.KL(flash))) + get.KLB(flash)
 
   if (!is.null(factor)) {
     KL <- KL + sum(unlist(get.KL(factor)))

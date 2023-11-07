@@ -116,3 +116,30 @@ dims.must.match <- function(X, Y, Y.dim = NULL) {
       stop(error.msg)
   }
 }
+
+
+dims.must.match.target <- function(X, X.dim){
+  error.msg <- paste("Dimensions of", deparse(substitute(X)), "do not match target.")
+  if (inherits(X, "lowrank")) {
+    dim.X <- sapply(X, nrow)
+  } else {
+    dim.X <- dim(X)
+  }
+  if (!is.null(X) && !identical(dim.X, X.dim)){
+    stop(error.msg)
+  }
+}
+
+must.be.psd <- function(X, tol = 1e-8){
+  if(!inherits(X, "matrix")){
+    stop(paste(deparse(substitute(X)), "should be a matrix."))
+  }
+  if(!isSymmetric(X)){
+      stop(paste(deparse(substitute(X)), "must be symmetric.\n"))
+  }
+  eXvals <- eigen(X, only.values = TRUE)$values
+  if(!all(eXvals >= -1*tol)){
+      stop(paste0(deparse(substitute(X)), " is not positive semi-definite.\n"))
+  }
+}
+

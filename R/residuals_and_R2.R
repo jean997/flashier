@@ -62,9 +62,9 @@ calc.R2 <- function(flash) {
       if (!any_missing(flash) && store.R2.as.scalar(flash)) {
         EFsq <- sum(Reduce(`*`, lapply(EF, crossprod)))
       } else if (get.dim(flash) == 2 && identical(Z, 1)) {
-        EFsq <- colSums(
-          apply(EF[[n]], 1, tcrossprod) * as.vector(crossprod(EF[[-n]]))
-        )
+          EFsq <- colSums(
+            apply(EF[[n]], 1, tcrossprod) * as.vector(crossprod(EF[[-n]]))
+          )
       } else {
         # TODO: fix for tensors
         EFsq <- premult.nmode.prod.r1(Z, lowrank.expand(EF)^2, r1.ones(flash), n)
@@ -146,6 +146,42 @@ calc.delta.R2 <- function(factor, flash) {
 
   return(delta.R2)
 }
+
+### add calc.delta.R2.afterB
+## calculate change in -2 (ER^T) B + B^T B
+# Used to update tau when tau is simple.
+calc.delta.R2.afterB <- function(old.flash, new.flash) {
+  R <- get.R(old.flash)
+  Y <- get.Y(old.flash)
+  Z <- get.nonmissing(old.flash)
+  EF <- get.EF(old.flash)
+  n <- get.R2.n(old.flash) ## indicates how tau is stored. 1 if tau is row-wise, 2 for col-wise
+
+
+  new.EB  <- get.EB(new.flash)
+  new.EB2 <- get.EB2(new.flash)
+
+  old.EB  <- get.EB(old.flash)
+  old.EB2 <- get.EB2(old.flash)
+
+  delta.EB2 <- new.EB2 - old.EB2
+  delta.EB <- new.EB - old.EB
+
+  ER <- Y - lowrank.expand(EF) ## t(EF[[1]]) %*% EF[[2]]
+
+
+
+  delta.R2 <- -2*premult.nmode.prod.r1(ER, delta.EB, r1.ones(new.flash), n)
+  delta.R2 <- delta.R2 + nmode.prod.r1(delta.EB2, r1.ones(new.flash), n)
+
+  if (store.R2.as.scalar(new.flash)) ## if variance mode is 0
+    delta.R2 <- sum(delta.R2)
+
+  return(delta.R2)
+}
+
+
+
 
 # Used to calculate objective when variance type is NULL.
 calc.tau.R2 <- function(flash, factor, n) {

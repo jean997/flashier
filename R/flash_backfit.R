@@ -86,17 +86,17 @@ flash_backfit <- function(flash,
     method <- "sequential"
   }
 
-  if (method == "parallel") {
-    check.parallel.ok(flash, kset)
-
-    # TODO: address this
-    if (missing(conv.crit.fn)) {
-      # Since decreases in the ELBO are possible, use absolute values.
-      conv.crit.fn <- function(new, old, k) {
-        return(abs(calc.obj.diff(new, old, k)))
-      }
-    }
-  }
+  # if (method == "parallel") {
+  #   check.parallel.ok(flash, kset)
+  #
+  #   # TODO: address this
+  #   if (missing(conv.crit.fn)) {
+  #     # Since decreases in the ELBO are possible, use absolute values.
+  #     conv.crit.fn <- function(new, old, k) {
+  #       return(abs(calc.obj.diff(new, old, k)))
+  #     }
+  #   }
+  # }
 
   flash <- set.warmstart(flash, warmstart)
 
@@ -115,15 +115,16 @@ flash_backfit <- function(flash,
                      verbose.colwidths,
                      backfit = TRUE)
 
-  if (method == "parallel") {
-    # Remove zero factors and fixed factors.
-    kset <- setdiff(kset, which(is.zero(flash)))
-    kset <- setdiff(kset, which.k.fixed(flash))
-
-    cl <- parallel::makeCluster(getOption("cl.cores", 2L),
-                                type = getOption("cl.type", "PSOCK"),
-                                useXDR = FALSE)
-  } else if (method == "extrapolate") {
+  # if (method == "parallel") {
+  #   # Remove zero factors and fixed factors.
+  #   kset <- setdiff(kset, which(is.zero(flash)))
+  #   kset <- setdiff(kset, which.k.fixed(flash))
+  #
+  #   cl <- parallel::makeCluster(getOption("cl.cores", 2L),
+  #                               type = getOption("cl.type", "PSOCK"),
+  #                               useXDR = FALSE)
+  # } else
+  if (method == "extrapolate") {
     extrapolate.control <- getOption("extrapolate.control", list())
     extrapolate.param <- set.extrapolate.param(extrapolate.control)
   }
@@ -140,7 +141,8 @@ flash_backfit <- function(flash,
 
     kset <- get.next.kset(method, kset, conv.crit, tol)
 
-    if (!(method %in% c("parallel", "extrapolate")))  {
+    #if (!(method %in% c("parallel", "extrapolate")))  {
+    if (method  == "sequential")  {
       for (k in kset) {
         old.f <- flash
         flash <- update.one.factor(flash, k, iter, verbose.lvl)
@@ -157,11 +159,11 @@ flash_backfit <- function(flash,
                           k = k,
                           backfit = TRUE)
       }
-    } else {
-      if (method == "parallel") {
-        old.f <- flash
-        flash <- update.factors.parallel(flash, kset, cl)
-      } else if (method == "extrapolate") {
+    } else { ## extrapolate method
+      # if (method == "parallel") {
+      #   old.f <- flash
+      #   flash <- update.factors.parallel(flash, kset, cl)
+      # } else if (method == "extrapolate") {
         proposed.f <- extrapolate.f(flash, old.f, extrapolate.param)
         proposed.f <- update.factors.in.kset(proposed.f, kset)
 
@@ -174,7 +176,13 @@ flash_backfit <- function(flash,
           flash <- proposed.f
           extrapolate.param <- accelerate(extrapolate.param)
         }
-      }
+     # }
+        ## update B, store KL term
+        old.fb <- flash
+        flash <- update_random_effect(old.fb)
+        flash <- update.tau.afterB(flash, old.fb)
+        ## update tau
+
 
       info <- calc.update.info(flash,
                                old.f,

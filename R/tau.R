@@ -37,6 +37,12 @@ update.tau <- function(factor, flash) {
   return(factor)
 }
 
+update.tau.afterB <- function(new.flash, old.flash){
+  stopifnot(is.tau.simple(new.flash))
+  new.flash <- update.simple.tau.afterB(new.flash, old.flash)
+  return(new.flash)
+}
+
 # Mainly used to initialize tau, but also used for parallel backfits.
 init.simple.tau <- function(flash) {
   if (is.null(get.Y2(flash)) && !uses.R(flash)) {
@@ -59,6 +65,17 @@ update.simple.tau <- function(factor, flash) {
   factor   <- set.tau(factor, tau)
 
   return(factor)
+}
+
+update.simple.tau.afterB <- function(new.flash, old.flash) {
+  delta.R2 <- calc.delta.R2.afterB(new.flash, old.flash)
+  est.tau  <- estimate.simple.tau(old.flash, delta.R2)
+  tau      <- tau.from.given.and.est(old.flash, est.tau)
+  new.flash   <- set.delta.R2(new.flash, delta.R2)
+  new.flash   <- set.est.tau(new.flash, est.tau)
+  new.flash <- set.tau(new.flash, tau)
+
+  return(new.flash)
 }
 
 init.zero.tau <- function(flash) {
