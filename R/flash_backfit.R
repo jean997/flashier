@@ -136,6 +136,12 @@ flash_backfit <- function(flash,
     extrapolate.param <- init.beta(extrapolate.param)
     old.f <- flash
   }
+
+  if(uses.re(flash)){
+    nre <- get.re.dim(flash)
+    p <- dim(get.Y(flash))[-nre]
+  }
+
   while (iter < maxiter  && max(conv.crit) > tol && !is.timed.out(flash)) {
     iter <- iter + 1
     #kset <- get.next.kset(method, kset, conv.crit, tol) # doesn't do anything for current methods
@@ -189,25 +195,26 @@ flash_backfit <- function(flash,
                         backfit = TRUE)
     }
 
-
-    ## update B, store KL term
-    old.fb <- flash
-    flash <- update_random_effect(old.fb)
-    ## update tau
-    #flash <- update.tau.afterB(flash, old.fb)
-    flash <- init.tau(flash)
-    flash <- set.obj(flash, calc.obj(flash))
-    info2 <- calc.update.info(flash,
-                             old.fb,
-                             conv.crit.fn,
-                             verbose.fns)
-    conv.crit2 <- get.conv.crit(info)
-    print_table.entry(verbose.lvl,
-                      verbose.colwidths,
-                      iter,
-                      info2,
-                      k = "all",
-                      backfit = TRUE)
+    if(uses.re(flash)){
+      ## update B, store KL term
+      old.fb <- flash
+      flash <- update_random_effect(old.fb)
+      ## update tau
+      #flash <- update.tau.afterB(flash, old.fb)
+      flash <- init.tau(flash)
+      flash <- set.obj(flash, calc.obj(flash))
+      info2 <- calc.update.info(flash,
+                               old.fb,
+                               conv.crit.fn,
+                               verbose.fns)
+      conv.crit <- max(get.conv.crit(info2)/p, conv.crit)
+      print_table.entry(verbose.lvl,
+                        verbose.colwidths,
+                        iter,
+                        info2,
+                        k = "all",
+                        backfit = TRUE)
+    }
 
 
     if (is.null(next.tol.target) && max(conv.crit) > 0 && max(conv.crit) < Inf) {
