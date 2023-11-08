@@ -101,8 +101,6 @@ calc.R2 <- function(flash) {
 calc.delta.R2 <- function(factor, flash) {
   R <- get.R(flash)
   Y <- get.Y(flash)
-  #EB <- get.EB(flash)
-  #Y <- Y - EB
   Z <- get.nonmissing(flash)
   n <- get.R2.n(flash)
   k <- get.k(factor)
@@ -128,11 +126,11 @@ calc.delta.R2 <- function(factor, flash) {
     ugly.mat <- lowranks.combine(EF2.delta.mat,
                                  lowrank.sc.mult(EFprod.delta.mat, -2))
   } else if (is.new.factor) { # && !uses.R(flash)
-    EFprod.mat <- lowranks.prod(new.EF, get.EF(flash), broadcast = TRUE)
+    EFprod.mat <- lowranks.prod(new.EF, get.EF.EB(flash), broadcast = TRUE)
     ugly.mat <- lowranks.combine(new.EF2,
                                  lowrank.sc.mult(EFprod.mat, 2))
   } else { # !is.new.factor && !uses.R(flash)
-    EF.less.k        <- lowrank.drop.k(get.EF(flash), k)
+    EF.less.k        <- lowrank.drop.k(get.EF.EB(flash), k)
     if (is.null(EF.less.k)) {
       ugly.mat <- NULL
     } else {

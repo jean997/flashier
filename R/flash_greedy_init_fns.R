@@ -68,6 +68,7 @@ flash_greedy_init_default <- function(flash,
   max.chg <- Inf
   iter <- 0
   while (max.chg > tol && iter < maxiter) {
+    #cat(iter, " ")
     iter <- iter + 1
     old.EF <- EF
     EF <- update.init.EF(EF, flash, update.order, sign_constraints)
