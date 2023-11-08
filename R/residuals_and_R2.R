@@ -156,7 +156,7 @@ calc.delta.R2 <- function(factor, flash) {
 }
 
 ### add calc.delta.R2.afterB
-## calculate change in -2 (ER^T) B + B^T B
+## calculate change in -2 (ER^2) B + B^2
 # Used to update tau when tau is simple.
 calc.delta.R2.afterB <- function(old.flash, new.flash) {
   R <- get.R(old.flash)
