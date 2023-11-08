@@ -61,6 +61,10 @@ flash_init <- function(data, S = NULL, var_type = 0L, S_dim = NULL,
   tol <- sqrt(.Machine$double.eps) * prod(get.dims(flash_fit(flash)))
   flash <- flash_set_conv_crit(flash, flash_conv_crit_elbo_diff, tol)
 
+  #if(!is.null(re_cov)){
+  #  flash <- update_random_effect(flash)
+  #}
+
   return(flash)
 }
 

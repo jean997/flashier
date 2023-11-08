@@ -189,6 +189,7 @@ calc.x <- function(factor, n, flash, s2, tau) {
     R        <- get.R(flash)
     Y        <- get.Y(flash)
     Z        <- get.nonmissing(flash)
+    #flash.EF <- get.EF.EB(flash)
     flash.EF <- get.EF(flash)
     flash.EB <- get.EB(flash)
     Y <- Y - flash.EB

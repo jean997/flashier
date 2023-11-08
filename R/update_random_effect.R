@@ -87,6 +87,43 @@ get.EB2 <- function(f){
   return(EB2)
 }
 
+get.EF.EB <- function(f){
+  EF <- get.EF(f)
+  EB <- get.EB(f)
+  if(all(EB == 0)) return(EF)
+  n <- get.re.dim(f)
+  p <- dim(get.Y(f))[-n]
+  if(is.null(EF)){
+    EF <- list(diag(p), diag(p))
+    EF[[n]] <- EB
+    class(EF) <- "lowrank"
+    return(EF)
+  }
+  EF[[n]] <- cbind(EF[[n]], EB)
+  EF[[-n]] <- cbind(EF[[-n]], diag(p))
+  class(EF) <- "lowrank"
+  return(EF)
+}
+
+get.EF2.EB2 <- function(f){
+  EF2 <- get.EF2(f)
+  EB2 <- get.EB2(f)
+  if(all(EB2 == 0)) return(EF2)
+  n <- get.re.dim(f)
+  p <- dim(get.Y(f))[-n]
+  if(is.null(EF2)){
+    EF2 <- list(diag(p), diag(p))
+    EF2[[n]] <- EB2
+    class(EF2) <- "lowrank"
+    return(EF2)
+  }
+  EF2[[n]] <- cbind(EF2[[n]], EB2)
+  EF2[[-n]] <- cbind(EF2[[-n]], diag(p))
+  class(EF2) <- "lowrank"
+  return(EF2)
+}
+
+
 get.KLB <- function(f){
   KLB <- f[["KLB"]]
   if(is.null(KLB)) return(0)
@@ -101,36 +138,40 @@ get.KLB <- function(f){
 # b | r \propto p(r | b)p(b)
 # exp( (r - b)^T diag(D) (r-b) + b^T (S0^{-1}) b)
 # b^T (S0^{-1} + diag(D)) b - 2*r^T diag(D) b
-# Sb = solve((S0^{-1} + diag(D)) = U 1/(1/d0 + D) U^T
+# Sb = solve((S0^{-1} + diag(D))
 # ub = Sb diag(D) r
 #
 # KL calculation
 # KL = E_post[ log(p_0(b)) - log(p_post(b))]
 # p_0(b) = N(b; 0, S_0); S_0 = U diag(d_0) U^T; d_0 = eigS$values
-# p_post(b) = N(b; mub, Sb); Sb = U diag(d) U^T; d = 1/(1/d0 + D)
-# KL = log(1/sqrt(det(S_0))) - log(1/sqrt(det(Sb)))
-#             - 0.5* E(b^T S0^{-1} b - (b - mub)^T Sb^{-1} (b - mub))
+# p_post(b) = N(b; mub, Sb);
+# KL = log(1/sqrt(det(S_0))) - 0.5 E[b^T S0^{-1} b]
+#      - log(1/sqrt(det(Sb))) + 0.5 E[(b - mub)^T Sb^{-1} (b - mub)]
+#    = -0.5 log(det(S_0)) - 0.5 (trace(Sb S0^{-1}) + mub Sb^{-1} mub)
+#      + 0.5 log(det(Sb)) + 0.5 p
 # E(b^T S0^{-1} b - (b - mub)^T Sb^{-1} (b - mub)) =
 #      E[ b^T (S0^{-1} - Sb^{-1})b] + mub^T Sb^{-1} mub
 #   = mub^T(S0^{-1} - Sb^{-1}) mub  + mub^T Sb^{-1} mub  + sum(diag(S0^{-1} - Sb^{-1})*diag(Sb))
-#  =  mub^T U diag(1/d0) U^T mub +  sum(diag(S0^{-1} - Sb^{-1})*diag(Sb))
+#  =  mub^T(S0^{-1}) mub + sum(diag(S0^{-1} - Sb^{-1})*diag(Sb))
 
 update.b.1 <- function(r, eigS, D){
   d0 <- eigS$values
   U <- eigS$vectors
-  d <- 1/((1/d0) + D)
+  #d <- 1/((1/d0) + D)
   # Sb <- emulator::quad.tform(diag(d), U) U diag(d) U^T
-  Sb <- tcrossprod(U, tcrossprod(U, diag(d)))
+  #Sb <- tcrossprod(U, tcrossprod(U, diag(d)))
+  S0_inv <- tcrossprod(U, tcrossprod(U, diag(1/d0)))
+  Sb <- solve( S0_inv + diag(D) )
   mub <- Sb %*% (r*D)
   mu2b <-  mub^2 + diag(Sb)
   ## calculate KL
-  delta_logdet <- -0.5*sum(log(d0)) + 0.5*sum(log(d))
+  eSb <- eigen(Sb)
+  delta_logdet <- -0.5*sum(log(d0)) + 0.5*sum(log(eSb$values))
 
-  # S0_inv <- emulator::quad.tform(diag(1/d0), U)
-  S0_inv <- tcrossprod(U, tcrossprod(U, diag(1/d0)))
   # a <- emulator::quad.form(S0_inv , mub) mub^T S0_inv mub
   a <- crossprod(crossprod(S0_inv, mub), mub)
-  X <- tcrossprod(U, tcrossprod(U, diag(-D)))
+  Sb_inv <- tcrossprod(eSb$vectors, tcrossprod(eSb$vectors, diag(1/eSb$values)))
+  X <- S0_inv - Sb_inv
   b <- sum(diag(X)*diag(Sb))
   kl <- delta_logdet - 0.5*(a + b)
 
@@ -141,22 +182,25 @@ update.b.1 <- function(r, eigS, D){
 update.b.all <- function(ER, eigS, D){
   d0 <- eigS$values
   U <- eigS$vectors
-  d <- 1/((1/d0) + D)
+  #d <- 1/((1/d0) + D)
   # Sb <- emulator::quad.tform(diag(d), U) U diag(d) U^T
-  Sb <- tcrossprod(U, tcrossprod(U, diag(d)))
+  # Sb <- tcrossprod(U, tcrossprod(U, diag(d)))
+
+  # S0_inv <- emulator::quad.tform(diag(1/d0), U)
+  S0_inv <- tcrossprod(U, tcrossprod(U, diag(1/d0)))
+  Sb <- solve( S0_inv + diag(D) )
   EB <- t(Sb %*% (t(ER)*D))
   EB2 <- t(t(EB^2) + diag(Sb))
 
   ## calculate KL
+  eSb <- eigen(Sb)
   N <- nrow(ER)
-  delta_logdet <- N*(-0.5*sum(log(d0)) + 0.5*sum(log(d)))
+  P <- ncol(ER)
+  delta_logdet <- N*(-0.5*sum(log(d0)) + 0.5*sum(log(eSb$values)))
 
-  # S0_inv <- emulator::quad.tform(diag(1/d0), U)
-  S0_inv <- tcrossprod(U, tcrossprod(U, diag(1/d0)))
   # a <- sum(emulator::quad.tdiag(S0_inv , EB)) sum(mub^T S0_inv mub)
+  b <- N*(sum(eigen(Sb %*% S0_inv, only.values = TRUE)$values) - P)
   a <- sum(rowSums(tcrossprod(EB, S0_inv) * EB))
-  X <- tcrossprod(U, tcrossprod(U, diag(-D)))
-  b <- N*(sum(diag(X)*diag(Sb)))
   kl <- delta_logdet - 0.5*(a + b)
 
   return(list(EB = EB, EB2 = EB2, kl = kl))

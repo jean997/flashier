@@ -95,8 +95,10 @@ update.init.EF <- function(EF, flash, update.order, sign_constraints) {
 update.init.EF.one.n <- function(EF, n, flash, sign) {
   R        <- get.R(flash)
   Y        <- get.Y(flash)
+  #EB <- get.EB(flash)
+  #Y <- Y - EB
   Z        <- get.nonmissing(flash)
-  flash.EF <- get.EF(flash)
+  flash.EF <- get.EF.EB(flash)
 
   if (uses.R(flash)) {
     new.vals <- (nmode.prod.r1(R, EF[-n], n)

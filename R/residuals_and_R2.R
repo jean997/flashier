@@ -43,8 +43,16 @@ calc.R2 <- function(flash) {
   Y   <- get.Y(flash)
   Y2  <- get.Y2(flash)
   Z   <- get.nonmissing(flash)
-  EF  <- get.EF(flash)
-  EF2 <- get.EF2(flash)
+  # EF  <- get.EF(flash)
+  # EF2 <- get.EF2(flash)
+  # EB <- get.EB(flash)
+  # if(!all(EB == 0)){
+  #   EF[[1]] <- cbind(EF[[1]], EB)
+  #   EF[[2]] <- cbind(EF[[2]], diag(nrow(EF[[2]])))
+  # }
+  EF <- get.EF.EB(flash)
+  EF2 <- get.EF2.EB2(flash)
+
   n   <- get.R2.n(flash)
 
   if (uses.R(flash)) {
@@ -93,6 +101,8 @@ calc.R2 <- function(flash) {
 calc.delta.R2 <- function(factor, flash) {
   R <- get.R(flash)
   Y <- get.Y(flash)
+  #EB <- get.EB(flash)
+  #Y <- Y - EB
   Z <- get.nonmissing(flash)
   n <- get.R2.n(flash)
   k <- get.k(factor)

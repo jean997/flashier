@@ -138,9 +138,7 @@ flash_backfit <- function(flash,
   }
   while (iter < maxiter  && max(conv.crit) > tol && !is.timed.out(flash)) {
     iter <- iter + 1
-
-    kset <- get.next.kset(method, kset, conv.crit, tol)
-
+    #kset <- get.next.kset(method, kset, conv.crit, tol) # doesn't do anything for current methods
     #if (!(method %in% c("parallel", "extrapolate")))  {
     if (method  == "sequential")  {
       for (k in kset) {
@@ -196,7 +194,20 @@ flash_backfit <- function(flash,
     old.fb <- flash
     flash <- update_random_effect(old.fb)
     ## update tau
-    flash <- update.tau.afterB(flash, old.fb)
+    #flash <- update.tau.afterB(flash, old.fb)
+    flash <- init.tau(flash)
+    flash <- set.obj(flash, calc.obj(flash))
+    info <- calc.update.info(flash,
+                             old.fb,
+                             conv.crit.fn,
+                             verbose.fns)
+    conv.crit <- get.conv.crit(info)
+    print_table.entry(verbose.lvl,
+                      verbose.colwidths,
+                      iter,
+                      info,
+                      k = "all",
+                      backfit = TRUE)
 
 
     if (is.null(next.tol.target) && max(conv.crit) > 0 && max(conv.crit) < Inf) {
