@@ -197,15 +197,15 @@ flash_backfit <- function(flash,
     #flash <- update.tau.afterB(flash, old.fb)
     flash <- init.tau(flash)
     flash <- set.obj(flash, calc.obj(flash))
-    info <- calc.update.info(flash,
+    info2 <- calc.update.info(flash,
                              old.fb,
                              conv.crit.fn,
                              verbose.fns)
-    conv.crit <- get.conv.crit(info)
+    conv.crit2 <- get.conv.crit(info)
     print_table.entry(verbose.lvl,
                       verbose.colwidths,
                       iter,
-                      info,
+                      info2,
                       k = "all",
                       backfit = TRUE)
 
