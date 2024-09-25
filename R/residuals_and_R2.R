@@ -1,3 +1,4 @@
+#' @exportS3Method NULL
 update.R <- function(flash, factor) {
   R <- get.R(factor)
   if (is.null(R))
@@ -24,15 +25,11 @@ calc.residuals <- function(flash, factor = NULL) {
 
 calc.Y2 <- function(flash) {
   Y <- get.Y(flash)
-  # TODO: remove ifelse; sq.nmode.prod.r1 should handle this case
-  if (inherits(Y, "lowrank") && store.R2.as.scalar(flash)) {
-    Y2 <- sum(Reduce(`*`, lapply(Y, crossprod)))
-  } else {
-    n  <- get.R2.n(flash)
-    Y2 <- sq.nmode.prod.r1(Y, r1.ones(flash), n)
-    if (store.R2.as.scalar(flash))
-      Y2 <- sum(Y2)
-  }
+  n  <- get.R2.n(flash)
+
+  Y2 <- sq.nmode.prod.r1(Y, r1.ones(flash), n)
+  if (store.R2.as.scalar(flash))
+    Y2 <- sum(Y2)
 
   return(Y2)
 }
@@ -62,9 +59,10 @@ calc.R2 <- function(flash) {
       if (!any_missing(flash) && store.R2.as.scalar(flash)) {
         EFsq <- sum(Reduce(`*`, lapply(EF, crossprod)))
       } else if (get.dim(flash) == 2 && identical(Z, 1)) {
-        EFsq <- colSums(
-          apply(EF[[n]], 1, tcrossprod) * as.vector(crossprod(EF[[-n]]))
-        )
+        EFsq <- apply(EF[[n]], 1, tcrossprod) * as.vector(crossprod(EF[[-n]]))
+        if (is.matrix(EFsq)) {
+          EFsq <- colSums(EFsq)
+        }
       } else {
         # TODO: fix for tensors
         EFsq <- premult.nmode.prod.r1(Z, lowrank.expand(EF)^2, r1.ones(flash), n)

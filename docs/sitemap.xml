@@ -10,13 +10,19 @@
     <loc>/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/articles/advanced.html</loc>
+    <loc>/articles/advanced_flashier.html</loc>
+  </url>
+  <url>
+    <loc>/articles/flashier_closer_look.html</loc>
+  </url>
+  <url>
+    <loc>/articles/flashier_intro.html</loc>
+  </url>
+  <url>
+    <loc>/articles/flashier_single_cell.html</loc>
   </url>
   <url>
     <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/articles/intro.html</loc>
   </url>
   <url>
     <loc>/authors.html</loc>
@@ -97,6 +103,24 @@
     <loc>/reference/flash_nullcheck.html</loc>
   </url>
   <url>
+    <loc>/reference/flash_plot_bar.html</loc>
+  </url>
+  <url>
+    <loc>/reference/flash_plot_heatmap.html</loc>
+  </url>
+  <url>
+    <loc>/reference/flash_plot_histogram.html</loc>
+  </url>
+  <url>
+    <loc>/reference/flash_plot_scatter.html</loc>
+  </url>
+  <url>
+    <loc>/reference/flash_plot_scree.html</loc>
+  </url>
+  <url>
+    <loc>/reference/flash_plot_structure.html</loc>
+  </url>
+  <url>
     <loc>/reference/flash_set_conv_crit.html</loc>
   </url>
   <url>
@@ -104,6 +128,9 @@
   </url>
   <url>
     <loc>/reference/flash_set_verbose.html</loc>
+  </url>
+  <url>
+    <loc>/reference/flash_update_data.html</loc>
   </url>
   <url>
     <loc>/reference/flash_verbose_elbo.html</loc>

@@ -33,8 +33,8 @@
 #'
 #' @examples
 #' # Initialize several factors at once and backfit.
-#' fl <- flash_init(gtex) %>%
-#'   flash_factors_init(init = svd(gtex, nu = 5, nv = 5)) %>%
+#' fl <- flash_init(gtex) |>
+#'   flash_factors_init(init = svd(gtex, nu = 5, nv = 5)) |>
 #'   flash_backfit()
 #'
 #' # Add fixed loadings with \ell_i identically equal to one. This can be
@@ -43,10 +43,10 @@
 #' ones <- matrix(1, nrow = nrow(gtex), ncol = 1)
 #' # Initialize the factor at the least squares solution.
 #' ls_soln <- t(solve(crossprod(ones), crossprod(ones, gtex)))
-#' fl <- flash_init(gtex) %>%
-#'   flash_factors_init(init = list(ones, ls_soln)) %>%
-#'   flash_factors_fix(kset = 1, which_dim = "loadings") %>%
-#'   flash_backfit() %>%
+#' fl <- flash_init(gtex) |>
+#'   flash_factors_init(init = list(ones, ls_soln)) |>
+#'   flash_factors_fix(kset = 1, which_dim = "loadings") |>
+#'   flash_backfit() |>
 #'   flash_greedy(Kmax = 5L)
 #'
 #' @importFrom ebnm ebnm_point_normal
@@ -66,11 +66,11 @@ flash_factors_init <- function(flash,
     EF2 <- get.EF2(init)
   } else {
     # Convert udv' to lowrank as needed:
-    EF <- handle.data(init)
-    EF2 <- NULL
+    init <- handle.data(init)
     if (is.list(init) && all(sapply(init, is.matrix))) {
       EF <- init
       class(EF) <- c("lowrank", "list")
+      EF2 <- NULL
     } else {
       stop("init must be an SVD-like object, a flash fit, or a list of matrices.")
     }
