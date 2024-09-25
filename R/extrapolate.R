@@ -15,6 +15,9 @@ set.extrapolate.param <- function(control) {
 
 extrapolate <- function(new, old, beta) {
   x <- new + beta * (new -old)
+  if(!inherits(new, "array")){
+    return(x)
+  }
   is_zero <- which(colSums(new^2) == 0)
   if(length(is_zero) > 0){
     x[,is_zero] <- 0
